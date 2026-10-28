@@ -10,7 +10,7 @@ const PAUSE_MS = 4000;
 const REQUEST_TIMEOUT_MS = 90e3;
 const BUDGET_MS = 6 * 60e3;
 const MAX_FAILED_BATCHES = 2;
-const FALLBACK_MODELS = ['gemini-flash-latest', 'gemini-flash-lite-latest', 'gemini-2.5-flash', 'gemini-2.5-flash-lite'];
+const FALLBACK_MODELS = ['gemini-flash-latest', 'gemini-flash-lite-latest'];
 
 const sleep = ms => new Promise(r => setTimeout(r, ms));
 
@@ -93,7 +93,14 @@ export async function summarize(pending, { apiKey, model }) {
       for (const m of [...models]) {
         const r = await callModel(m, batch, apiKey);
         if (r === 'gone') models.splice(models.indexOf(m), 1);
-        else if (r !== 'busy') { result = r; console.log(`Sažeci ${i + 1}-${i + batch.length}: ${m}`); break; }
+        else if (r !== 'busy') {
+          result = r;
+          console.log(`Sažeci ${i + 1}-${i + batch.length}: ${m}`);
+          // Model koji je upravo radio ide prvi za sljedeće grupe.
+          models.splice(models.indexOf(m), 1);
+          models.unshift(m);
+          break;
+        }
       }
       if (!models.length) break;
     }

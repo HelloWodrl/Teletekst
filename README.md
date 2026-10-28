@@ -6,7 +6,7 @@ Web aplikacija (PWA) koja se s preglednika dodaje na početni zaslon mobitela (A
 ## Kako radi
 
 1. **Svaki sat** GitHub Actions pokrene `pipeline/run.js`:
-   - dohvati RSS feedove 13 portala (`pipeline/sources.json`)
+   - dohvati RSS feedove 12 portala (`pipeline/sources.json`)
    - članke o istoj temi spoji u jednu temu i rangira ih po broju neovisnih portala i svježini
    - razvrsta teme po rubrikama i regijama (Slavonija, Vukovarsko-srijemska, Vinkovci)
    - za nove teme napravi sažetak od 5–6 rečenica pomoću Gemini AI-ja

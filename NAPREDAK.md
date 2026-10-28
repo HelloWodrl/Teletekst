@@ -2,8 +2,8 @@
 
 ## Dogovoreno
 - **PWA** aplikacija u teletekst stilu, za obitelj, sve besplatno (GitHub Pages + GitHub Actions + Gemini besplatna razina).
-- **Izvori (13):** Jutarnji, Večernji, Index, Dnevnik.hr, Net.hr, N1, 24sata, tportal, RTL, Telegram + regionalni SiB, Osijek031, Vinkulja.
-  HRT i Glas Slavonije su preskočeni.
+- **Izvori (12):** Jutarnji, Večernji, Index, Dnevnik.hr, Net.hr, N1, tportal, RTL, Telegram + regionalni SiB, Osijek031, Vinkulja.
+  HRT i Glas Slavonije su preskočeni; 24sata je maknut jer blokira zahtjeve s GitHuba (HTTP 403).
 - **Osvježavanje:** svakih sat vremena, novija/važnija tema zamjenjuje slabiju.
 - **Sažeci:** 5–6 rečenica, Gemini (za početak), uz izvore i link na članak.
 - **Podstranice** se listaju tipkom „Sljedeća“ (ili prstom), bez automatskog izmjenjivanja.

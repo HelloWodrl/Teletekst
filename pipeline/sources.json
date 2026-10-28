@@ -5,7 +5,6 @@
   { "id": "dnevnik",   "name": "Dnevnik.hr", "group": "united", "urls": ["https://dnevnik.hr/assets/feed/articles"] },
   { "id": "net",       "name": "Net.hr",                        "urls": ["https://net.hr/feed"] },
   { "id": "n1",        "name": "N1",         "group": "united", "urls": ["https://n1info.hr/feed/"] },
-  { "id": "24sata",    "name": "24sata",     "group": "styria", "urls": ["https://www.24sata.hr/feeds/aktualno.xml"] },
   { "id": "tportal",   "name": "tportal",                       "urls": ["https://www.tportal.hr/rss"] },
   { "id": "rtl",       "name": "RTL",                           "urls": ["https://www.rtl.hr/rss"] },
   { "id": "telegram",  "name": "Telegram",                      "urls": ["https://www.telegram.hr/feed/"] },
