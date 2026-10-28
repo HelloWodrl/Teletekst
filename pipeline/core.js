@@ -355,6 +355,7 @@ export function buildEdition({ sources, feeds, prev, now = Date.now() }) {
     edition: {
       v: 1,
       generated: new Date(now).toISOString(),
+      ai: Object.values(out).some(t => t.ai),
       front: front.map(t => t.id),
       sections,
       regions,
