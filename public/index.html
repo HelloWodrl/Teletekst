@@ -1,0 +1,41 @@
+<!doctype html>
+<html lang="hr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#000000">
+  <meta name="description" content="Najvažnije vijesti s hrvatskih portala u teletekst formatu">
+  <title>Teletekst vijesti</title>
+  <link rel="manifest" href="manifest.webmanifest">
+  <link rel="icon" href="icons/icon-192.png">
+  <link rel="apple-touch-icon" href="icons/icon-192.png">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=VT323&display=block">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <main id="tv">
+    <div id="screen" role="document" aria-live="polite"></div>
+  </main>
+
+  <nav id="remote" aria-label="Daljinski upravljač">
+    <div class="fast">
+      <button data-fast="0" class="k-red"   aria-label="Crvena tipka"></button>
+      <button data-fast="1" class="k-green" aria-label="Zelena tipka"></button>
+      <button data-fast="2" class="k-yellow" aria-label="Žuta tipka"></button>
+      <button data-fast="3" class="k-cyan"  aria-label="Plava tipka"></button>
+    </div>
+    <div class="keys">
+      <button data-digit="1">1</button><button data-digit="2">2</button><button data-digit="3">3</button>
+      <button data-digit="4">4</button><button data-digit="5">5</button><button data-digit="6">6</button>
+      <button data-digit="7">7</button><button data-digit="8">8</button><button data-digit="9">9</button>
+      <button data-step="-1" aria-label="Prethodna stranica">P−</button>
+      <button data-digit="0">0</button>
+      <button data-step="1" aria-label="Sljedeća stranica">P+</button>
+    </div>
+  </nav>
+
+  <script type="module" src="app.js"></script>
+</body>
+</html>

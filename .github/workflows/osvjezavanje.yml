@@ -1,0 +1,62 @@
+# Svaki sat: dohvati vijesti, napravi sažetke (Gemini) i objavi aplikaciju na GitHub Pages.
+name: Osvježavanje vijesti
+
+on:
+  schedule:
+    - cron: '7 * * * *'      # svaki sat u 7. minuti (UTC)
+  workflow_dispatch:          # ručno pokretanje iz kartice Actions
+  push:
+    branches: [main]
+
+permissions:
+  contents: write
+  pages: write
+  id-token: write
+
+concurrency:
+  group: osvjezavanje
+  cancel-in-progress: false
+
+jobs:
+  osvjezi:
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deploy.outputs.page_url }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - id: pages
+        uses: actions/configure-pages@v5
+
+      - name: Dohvati vijesti i napravi sažetke
+        run: node pipeline/run.js
+        env:
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+          GEMINI_MODEL: ${{ vars.GEMINI_MODEL }}
+          SITE_URL: ${{ steps.pages.outputs.base_url }}
+
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: public
+
+      - id: deploy
+        uses: actions/deploy-pages@v4
+
+      # GitHub gasi zakazane poslove u repozitoriju bez aktivnosti 60 dana,
+      # pa jednom dnevno zapišemo kratku bilješku da posao ostane uključen.
+      - name: Dnevna bilješka
+        if: github.event_name == 'schedule'
+        run: |
+          if [ "$(date -u +%H)" = "03" ]; then
+            date -u +%Y-%m-%dT%H:%MZ > .github/zadnje-osvjezavanje.txt
+            git config user.name "github-actions[bot]"
+            git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+            git add .github/zadnje-osvjezavanje.txt
+            git commit -m "Dnevna bilješka osvježavanja" || exit 0
+            git push
+          fi

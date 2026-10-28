@@ -1,0 +1,16 @@
+[
+  { "id": "jutarnji",  "name": "Jutarnji",   "group": "hanza",  "urls": ["https://www.jutarnji.hr/feed"] },
+  { "id": "vecernji",  "name": "Večernji",   "group": "styria", "urls": ["https://www.vecernji.hr/feeds/latest"] },
+  { "id": "index",     "name": "Index",                         "urls": ["https://www.index.hr/rss"] },
+  { "id": "dnevnik",   "name": "Dnevnik.hr", "group": "united", "urls": ["https://dnevnik.hr/assets/feed/articles"] },
+  { "id": "net",       "name": "Net.hr",                        "urls": ["https://net.hr/feed"] },
+  { "id": "n1",        "name": "N1",         "group": "united", "urls": ["https://n1info.hr/feed/"] },
+  { "id": "24sata",    "name": "24sata",     "group": "styria", "urls": ["https://www.24sata.hr/feeds/aktualno.xml"] },
+  { "id": "tportal",   "name": "tportal",                       "urls": ["https://www.tportal.hr/rss"] },
+  { "id": "rtl",       "name": "RTL",                           "urls": ["https://www.rtl.hr/rss"] },
+  { "id": "telegram",  "name": "Telegram",                      "urls": ["https://www.telegram.hr/feed/"] },
+
+  { "id": "sib",       "name": "SiB",        "regional": true,  "urls": ["https://sib.net.hr/feed/"] },
+  { "id": "osijek031", "name": "Osijek031",  "regional": true,  "urls": ["https://osijek031.com/feed/"] },
+  { "id": "vinkulja",  "name": "Vinkulja",   "regional": true,  "local": "vinkovci", "urls": ["https://vinkulja.hr/feed/"] }
+]

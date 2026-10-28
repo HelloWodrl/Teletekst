@@ -1,0 +1,57 @@
+<!doctype html>
+<html lang="hr">
+<head>
+<meta charset="utf-8">
+<title>Testna obrada vijesti</title>
+<style>
+  body { font: 14px/1.5 system-ui, sans-serif; margin: 16px; background: #fff; color: #111; }
+  pre { background: #f4f4f4; padding: 8px; white-space: pre-wrap; }
+  h2 { font-size: 16px; margin: 16px 0 4px; }
+  li small { color: #666; }
+</style>
+</head>
+<body>
+<h1>Testna obrada vijesti</h1>
+<p>Pokreće <code>pipeline/core.js</code> na feedovima iz <code>dev/feeds</code> (preuzmite ih s <code>dev/snapshot.ps1</code>)
+i sprema rezultat u <code>public/data/news.json</code>. Bez Gemini ključa sažeci su prve rečenice članka.</p>
+<pre id="log">Obrada...</pre>
+<div id="out"></div>
+<script type="module">
+import { parseFeed, buildEdition } from '../pipeline/core.js';
+
+const log = m => { document.getElementById('log').textContent += '\n' + m; };
+const esc = s => s.replace(/[&<>]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;' }[c]));
+
+const sources = await (await fetch('../pipeline/sources.json')).json();
+const feeds = [];
+for (const s of sources) {
+  for (let i = 0; i < s.urls.length; i++) {
+    const res = await fetch(`feeds/${s.id}-${i}.xml`);
+    const items = res.ok ? parseFeed(await res.text(), s) : [];
+    log(`${s.name.padEnd(12)} ${items.length}`);
+    feeds.push({ source: s.id, items });
+  }
+}
+const prevRes = await fetch('../public/data/news.json');
+const prev = prevRes.ok ? await prevRes.json() : null;
+const t0 = performance.now();
+const { edition, pending } = buildEdition({ sources, feeds, prev });
+log(`Teme: ${Object.keys(edition.topics).length}, za AI sažetak: ${pending.length}, ${Math.round(performance.now() - t0)} ms`);
+
+const put = await fetch('../public/data/news.json', { method: 'PUT', body: JSON.stringify(edition) });
+log(put.ok ? 'Spremljeno u public/data/news.json' : 'Spremanje nije uspjelo: ' + put.status);
+
+let html = '';
+for (const list of [{ title: 'NASLOVNICA', items: edition.front }, ...edition.sections, ...edition.regions]) {
+  html += `<h2>${list.page || 100} ${list.title}</h2><ol>`;
+  for (const id of list.items) {
+    const t = edition.topics[id];
+    html += `<li>${esc(t.title)} <small>[${t.score}] ${t.sources.map(s => s.n).join(', ')} · ${t.section} ${t.regions.join(' ')}</small></li>`;
+  }
+  html += '</ol>';
+}
+document.getElementById('out').innerHTML = html;
+window.edition = edition;
+</script>
+</body>
+</html>
