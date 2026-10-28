@@ -288,7 +288,7 @@ export function buildEdition({ sources, feeds, prev, now = Date.now() }) {
     const srcs = [];
     for (const it of c.items) if (!srcs.some(s => s.n === srcById[it.source].name)) srcs.push({ n: srcById[it.source].name, u: it.link });
     return {
-      id: old?.id || hash(c.items[c.items.length - 1].link),
+      id: old?.id || null,
       title: old?.ai ? old.title : c.items.find(i => !srcById[i.source].regional)?.title || c.items[0].title,
       summary: old?.summary || null,
       ai: !!old?.ai,
@@ -306,6 +306,16 @@ export function buildEdition({ sources, feeds, prev, now = Date.now() }) {
       _items: c.items,
     };
   });
+
+  // Nove teme dobivaju ID tek nakon što su stare zadržale svoje, da se ne poklope.
+  const ids = new Set(topics.map(t => t.id).filter(Boolean));
+  for (const t of topics) {
+    if (t.id) continue;
+    let id = hash(t._items[t._items.length - 1].link);
+    while (ids.has(id)) id = hash(id + '+');
+    ids.add(id);
+    t.id = id;
+  }
 
   const nationalSorted = topics.filter(t => t.national).sort((a, b) => b.score - a.score);
   const frontWeight = { sport: 0.8, kultura: 0.7 };

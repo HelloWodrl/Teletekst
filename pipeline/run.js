@@ -9,11 +9,16 @@ import { parseFeed, buildEdition, applySummaries, articleText } from './core.js'
 import { summarize } from './gemini.js';
 
 const OUT = new URL('../public/data/news.json', import.meta.url);
-const UA = 'Mozilla/5.0 (compatible; TeletekstVijesti/1.0; obiteljska aplikacija)';
+// Neki portali (npr. 24sata) odbijaju zahtjeve koji se ne predstave kao preglednik.
+const HEADERS = {
+  'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/130.0.0.0 Safari/537.36',
+  'Accept': 'application/rss+xml, application/xml;q=0.9, text/html;q=0.8, */*;q=0.5',
+  'Accept-Language': 'hr-HR,hr;q=0.9,en;q=0.5',
+};
 const MAX_ARTICLE_FETCH = 25;
 
 async function get(url, ms = 20000) {
-  const res = await fetch(url, { headers: { 'User-Agent': UA }, signal: AbortSignal.timeout(ms) });
+  const res = await fetch(url, { headers: HEADERS, signal: AbortSignal.timeout(ms) });
   if (!res.ok) throw new Error(`HTTP ${res.status}`);
   return res.text();
 }
