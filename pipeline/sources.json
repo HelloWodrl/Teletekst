@@ -11,5 +11,6 @@
 
   { "id": "sib",       "name": "SiB",        "regional": true,  "urls": ["https://sib.net.hr/feed/"] },
   { "id": "osijek031", "name": "Osijek031",  "regional": true,  "urls": ["https://osijek031.com/feed/"] },
-  { "id": "vinkulja",  "name": "Vinkulja",   "regional": true,  "local": "vinkovci", "urls": ["https://vinkulja.hr/feed/"] }
+  { "id": "vinkulja",  "name": "Vinkulja",   "regional": true,  "local": "vinkovci", "urls": ["https://vinkulja.hr/feed/"] },
+  { "id": "budica",    "name": "Budica",     "regional": true,  "local": "vinkovci", "urls": ["https://budica.info/feed/"] }
 ]

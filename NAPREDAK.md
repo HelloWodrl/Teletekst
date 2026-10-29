@@ -2,7 +2,9 @@
 
 ## Dogovoreno
 - **PWA** aplikacija u teletekst stilu, za obitelj, sve besplatno (GitHub Pages + GitHub Actions + Gemini besplatna razina).
-- **Izvori (12):** Jutarnji, Večernji, Index, Dnevnik.hr, Net.hr, N1, tportal, RTL, Telegram + regionalni SiB, Osijek031, Vinkulja.
+- **Izvori (13):** Jutarnji, Večernji, Index, Dnevnik.hr, Net.hr, N1, tportal, RTL, Telegram + regionalni SiB, Osijek031, Vinkulja, Budica.
+- **Nogomet (550–557):** HNL, Prva NL i lige petice s LiveScorea; 1/2 utakmice (danas + zadnji/sljedeći dani), 2/2 tablica. Osvježava se svakih 15 minuta (`.github/workflows/nogomet.yml`, objava samo kad se nešto promijeni).
+- **Brojčane tipke** se mogu sakriti; tada se slova izdužuju (do 1,6×) za bolju čitljivost.
   HRT i Glas Slavonije su preskočeni; 24sata je maknut jer blokira zahtjeve s GitHuba (HTTP 403).
 - **Osvježavanje:** svakih sat vremena, novija/važnija tema zamjenjuje slabiju.
 - **Sažeci:** 5–6 rečenica, Gemini (za početak), uz izvore i link na članak.

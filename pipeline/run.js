@@ -7,26 +7,16 @@
 import { readFile, writeFile, mkdir } from 'node:fs/promises';
 import { parseFeed, buildEdition, applySummaries, articleText } from './core.js';
 import { summarize } from './gemini.js';
+import { loadFootball } from './football.js';
+import { get, siteDataUrl } from './http.js';
 
 const OUT = new URL('../public/data/news.json', import.meta.url);
-// Iskreno predstavljanje; lažni "Chrome" neki portali (Osijek031) prepoznaju i blokiraju.
-const HEADERS = {
-  'User-Agent': 'Mozilla/5.0 (compatible; TeletekstVijesti/1.0; obiteljska aplikacija)',
-  'Accept': 'application/rss+xml, application/xml;q=0.9, text/html;q=0.8, */*;q=0.5',
-  'Accept-Language': 'hr-HR,hr;q=0.9,en;q=0.5',
-};
 const MAX_ARTICLE_FETCH = 25;
-
-async function get(url, ms = 20000) {
-  const res = await fetch(url, { headers: HEADERS, signal: AbortSignal.timeout(ms) });
-  if (!res.ok) throw new Error(`HTTP ${res.status}`);
-  return res.text();
-}
 
 async function loadPrev() {
   const site = process.env.SITE_URL;
   if (site) {
-    try { return JSON.parse(await get(new URL('data/news.json', site.endsWith('/') ? site : site + '/').href)); }
+    try { return JSON.parse(await get(siteDataUrl(site))); }
     catch (e) { console.warn(`Prethodno izdanje sa stranice nije dostupno: ${e.message}`); }
   }
   try { return JSON.parse(await readFile(OUT, 'utf8')); } catch { return null; }
@@ -73,6 +63,8 @@ async function main() {
     // Drugi prolaz: AI je možda premjestio teme u druge rubrike.
     ({ edition } = buildEdition({ sources, feeds, prev: edition }));
   }
+
+  edition.football = await loadFootball(get, prev?.football);
 
   await mkdir(new URL('.', OUT), { recursive: true });
   await writeFile(OUT, JSON.stringify(edition));

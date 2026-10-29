@@ -84,6 +84,11 @@ body {
 
 .keys { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
 
+/* Skrivene brojčane tipke: ekran dobiva više mjesta, a slova se izdužuju (kao dvostruka visina na TV teletekstu). */
+#remote #keys-toggle { font-size: 20px; height: 36px; color: #aaa; }
+body.no-keys .keys { display: none; }
+#screen { transform-origin: top left; transform: scaleY(var(--sy, 1)); }
+
 @media (min-aspect-ratio: 4/3) and (min-width: 900px) {
   body { flex-direction: row; justify-content: center; align-items: flex-start; padding-top: 24px; }
   #remote { width: 240px; padding-top: 8px; }

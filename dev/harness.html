@@ -18,6 +18,7 @@ i sprema rezultat u <code>public/data/news.json</code>. Bez Gemini ključa saže
 <div id="out"></div>
 <script type="module">
 import { parseFeed, buildEdition } from '../pipeline/core.js';
+import { LEAGUES, parseStage } from '../pipeline/football.js';
 
 const log = m => { document.getElementById('log').textContent += '\n' + m; };
 const esc = s => s.replace(/[&<>]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;' }[c]));
@@ -37,6 +38,15 @@ const prev = prevRes.ok ? await prevRes.json() : null;
 const t0 = performance.now();
 const { edition, pending } = buildEdition({ sources, feeds, prev });
 log(`Teme: ${Object.keys(edition.topics).length}, za AI sažetak: ${pending.length}, ${Math.round(performance.now() - t0)} ms`);
+
+const leagues = [];
+for (const l of LEAGUES) {
+  const res = await fetch(`feeds/football-${l.key}.json`);
+  const lg = res.ok ? parseStage(await res.json(), l) : { key: l.key, name: l.name, page: l.page, matches: [], table: [] };
+  log(`${l.name.padEnd(16)} utakmica ${lg.matches.length}, klubova ${lg.table.length}`);
+  leagues.push({ ...lg, updated: res.ok ? new Date().toISOString() : null });
+}
+edition.football = { leagues };
 
 const put = await fetch('../public/data/news.json', { method: 'PUT', body: JSON.stringify(edition) });
 log(put.ok ? 'Spremljeno u public/data/news.json' : 'Spremanje nije uspjelo: ' + put.status);

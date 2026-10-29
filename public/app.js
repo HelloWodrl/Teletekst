@@ -7,11 +7,16 @@ const ROWS = 24;
 const BODY = 21;              // redovi 2–22; 0 je zaglavlje, 1 traka rubrike, 23 obojene tipke
 const TEXT_W = 38;            // tekst s razmakom od jednog znaka s lijeve strane
 const DATA_REFRESH_MS = 10 * 60e3;
+const MAX_STRETCH = 1.6;      // najveće izduživanje slova kad su brojčane tipke skrivene
 const WEATHER_MAX_AGE_MS = 30 * 60e3;
 const WEATHER_URL = 'https://api.open-meteo.com/v1/forecast?latitude=45.2883&longitude=18.8047' +
   '&current=temperature_2m,relative_humidity_2m,weather_code,wind_speed_10m' +
   '&daily=weather_code,temperature_2m_max,temperature_2m_min,precipitation_probability_max' +
   '&timezone=Europe%2FZagreb&forecast_days=7';
+
+const FOOTBALL_PAGE = 550;
+// Stanja utakmice s LiveScorea; sve ostalo (npr. "67'") je minuta utakmice u tijeku.
+const MATCH_STATUS = { FT: 'kraj', AET: 'kraj', AP: 'kraj', 'Pen.': 'kraj', HT: 'pol.', 'Postp.': 'odg.', 'Canc.': 'otk.', 'Aband.': 'prek.' };
 
 const DAYS = ['NED', 'PON', 'UTO', 'SRI', 'ČET', 'PET', 'SUB'];
 const NAMES = {
@@ -98,6 +103,10 @@ function textRows(text, color) {
   return wrap(text, TEXT_W).map(l => [S(' ' + l, color)]);
 }
 
+const center = (s, n) => pad(' '.repeat(Math.max(0, Math.floor((n - s.length) / 2))) + s, n);
+const dayKey = ts => { const d = new Date(ts); return `${d.getFullYear()}-${two(d.getMonth() + 1)}-${two(d.getDate())}`; };
+const hhmm = ts => { const d = new Date(ts); return `${two(d.getHours())}:${two(d.getMinutes())}`; };
+
 // ---------- registar stranica ----------
 
 function buildPages() {
@@ -105,6 +114,10 @@ function buildPages() {
   for (const list of [...(data?.sections || []), ...(data?.regions || [])]) {
     pages.set(list.page, { kind: 'index', list });
     list.items.forEach((id, i) => pages.set(list.page + 1 + i, { kind: 'topic', list, id }));
+  }
+  if (data?.football) {
+    pages.set(FOOTBALL_PAGE, { kind: 'football' });
+    for (const lg of data.football.leagues) pages.set(lg.page, { kind: 'league', lg });
   }
   order = [...pages.keys()].sort((a, b) => a - b);
 }
@@ -152,10 +165,10 @@ function guidePage() {
     row.push(S(' ' + '.'.repeat(Math.max(1, 34 - name.length)) + ' ', 'b'), S(String(num), 'c', null, { go: num }));
     return row;
   };
-  const lines = [blank(), [S(' STRANICE', 'y')]];
-  lines.push(item(100, 'Naslovnica'));
+  const lines = [blank(), item(100, 'Naslovnica')];
   for (const s of data?.sections || []) lines.push(item(s.page, NAMES[s.key] || s.title));
   for (const r of data?.regions || []) lines.push(item(r.page, NAMES[r.key] || r.title));
+  if (data?.football) lines.push(item(FOOTBALL_PAGE, 'Nogomet: rezultati i tablice'));
   lines.push(item(900, 'Vrijeme Vinkovci'), item(199, 'Izvori i informacije'));
   lines.push(
     blank(),
@@ -171,6 +184,7 @@ function guidePage() {
 
 function indexPage({ list }) {
   const lines = [blank()];
+  if (list.key === 'sport' && data.football) lines.push(...entry(FOOTBALL_PAGE, 'NOGOMET: REZULTATI I TABLICE', 'y'), blank());
   if (!list.items.length) lines.push(...textRows('Trenutno nema vijesti u ovoj rubrici.', 'w'));
   list.items.forEach((id, i) => {
     const t = data.topics[id];
@@ -194,6 +208,81 @@ function topicPage({ list, id }) {
   return { kind: 'topic', key: list.key, title: list.title, up: list.page, lines };
 }
 
+// 550: popis liga s brojem današnjih utakmica
+function footballPage() {
+  const today = dayKey(Date.now());
+  const lines = [blank(), [S(' NOGOMET - DANAS I TABLICE', 'y')], blank()];
+  data.football.leagues.forEach((lg, i) => {
+    const n = lg.matches.filter(m => dayKey(m.t) === today).length;
+    lines.push(...entry(lg.page, n ? `${lg.name} (danas ${n})` : lg.name, i % 2 ? 'w' : 'c'));
+  });
+  lines.push(
+    blank(),
+    ...textRows('Na stranici lige 1/2 su utakmice i rezultati, a 2/2 tablica. Zelenom tipkom do tablice.', 'w'),
+    blank(),
+    ...textRows('Rezultati se osvježavaju svakih 15 minuta, pa utakmica u tijeku može malo kasniti.', 'c'),
+  );
+  return { kind: 'football', key: 'sport', title: 'NOGOMET', up: 500, upLabel: 'Sport', lines };
+}
+
+function matchRow(m, i) {
+  const status = m.st === 'NS' ? hhmm(m.t) : MATCH_STATUS[m.st] || m.st;
+  const color = m.st === 'NS' ? 'c' : MATCH_STATUS[m.st] ? 'w' : 'g';
+  const score = m.st !== 'NS' && m.s1 != null ? `${m.s1}:${m.s2}` : '-';
+  const team = i % 2 ? 'c' : 'w';
+  return [S(' '), S(pad(status, 5), color), S(' '), S(pad(m.h, 13), team), S(' '), S(center(score, 5), 'y'), S(' '), S(pad(m.a, 13), team)];
+}
+
+function dayLabel(key, today) {
+  const d = new Date(key + 'T12:00:00');
+  const date = `${DAYS[d.getDay()]} ${two(d.getDate())}.${two(d.getMonth() + 1)}.`;
+  return key === today ? `DANAS, ${date}` : date;
+}
+
+// 551–557: 1/2 utakmice (danas, pa koliko stane zadnjih i sljedećih dana), 2/2 tablica
+function leaguePage({ lg }) {
+  const today = dayKey(Date.now());
+  const days = new Map();
+  for (const m of lg.matches) {
+    const k = dayKey(m.t);
+    if (!days.has(k)) days.set(k, []);
+    days.get(k).push(m);
+  }
+  const past = [...days.keys()].filter(k => k < today).reverse();
+  const ahead = [...days.keys()].filter(k => k > today);
+  const lines = [blank()];
+  let used = 2; // prazni red na vrhu + red "Stanje u"
+  if (!days.has(today)) { lines.push([S(' Danas nema utakmica.', 'w')], blank()); used += 2; }
+  const order = days.has(today) ? [today] : [];
+  for (let i = 0; i < Math.max(past.length, ahead.length); i++) order.push(past[i], ahead[i]);
+  const chosen = [];
+  for (const k of order.filter(Boolean)) {
+    const n = days.get(k).length + 2;
+    if (chosen.length && used + n > BODY) continue;
+    chosen.push(k);
+    used += n;
+  }
+  for (const k of chosen.sort()) {
+    lines.push([S(' ' + dayLabel(k, today), k === today ? 'y' : 'g')], ...days.get(k).map(matchRow), blank());
+  }
+  if (!chosen.length) lines.push(...textRows('Ovih dana nema utakmica.', 'w'), blank());
+  if (lg.updated) lines.push([S(` Stanje u ${hhmm(lg.updated)}`, 'm')]);
+  while (lines.length % BODY) lines.push(blank());
+
+  const num = (v, n) => String(v).padStart(n);
+  lines.push([S(' ' + num('#', 2) + ' ' + pad('Klub', 14) + '  U  P  N  I' + num('Gol', 6) + num('B', 4), 'c')]);
+  if (!lg.table.length) lines.push(...textRows('Tablica trenutno nije dostupna.', 'w'));
+  lg.table.forEach(([rnk, name, pld, w, d, l, gf, ga, pts], i) => {
+    const c = i % 2 ? 'c' : 'w';
+    lines.push([
+      S(' ' + num(rnk, 2) + ' ' + pad(name, 14), c),
+      S(num(pld, 3) + num(w, 3) + num(d, 3) + num(l, 3) + num(`${gf}:${ga}`, 6), c),
+      S(num(pts, 4), 'y'),
+    ]);
+  });
+  return { kind: 'league', key: 'sport', title: lg.name.toUpperCase(), up: FOOTBALL_PAGE, upLabel: 'Nogomet', lines };
+}
+
 function infoPage() {
   const lines = [blank()];
   if (!data) lines.push(...loadingRows());
@@ -208,6 +297,7 @@ function infoPage() {
       blank(),
       ...textRows('Sažeci nastaju automatski i mogu sadržavati pogreške. Cijela vijest je na portalu izvora.', 'c'),
       [S(' Prognoza: Open-Meteo.com', 'c')],
+      [S(' Nogometni rezultati: LiveScore', 'c')],
     );
   }
   return { kind: 'info', title: 'IZVORI I INFORMACIJE', lines };
@@ -258,6 +348,8 @@ function buildPage(p) {
   if (pg.kind === 'info') return infoPage();
   if (pg.kind === 'weather') return weatherPage();
   if (pg.kind === 'index') return indexPage(pg);
+  if (pg.kind === 'football') return footballPage();
+  if (pg.kind === 'league') return leaguePage(pg);
   return topicPage(pg);
 }
 
@@ -299,7 +391,7 @@ function bannerRow(pg) {
 }
 
 function fastFor(pg) {
-  const up = pg.kind === 'topic' ? [pg.up, 'Rubrika'] : pg.kind === 'front' ? [900, 'Vrijeme'] : [100, 'Početna'];
+  const up = pg.up ? [pg.up, pg.upLabel || 'Rubrika'] : pg.kind === 'front' ? [900, 'Vrijeme'] : [100, 'Početna'];
   const blue = cur.p === 101 ? [199, 'Izvori'] : [101, 'Vodič'];
   return [
     { label: 'Prethodna', act: prev },
@@ -443,8 +535,21 @@ function fit() {
   const availW = (side ? innerWidth - remote.offsetWidth - 48 : innerWidth) - 16;
   const availH = (side ? innerHeight - 40 : innerHeight - remote.offsetHeight) - 16;
   const fs = Math.max(8, Math.floor(Math.min(availW / ratio, availH / ROWS) * 4) / 4);
+  // Bez brojčanih tipki na mobitelu širina ograničava slova, pa se višak visine koristi za izduživanje.
+  const sy = document.body.classList.contains('no-keys') ? Math.min(MAX_STRETCH, Math.max(1, availH / ROWS / fs)) : 1;
   document.documentElement.style.setProperty('--fs', fs + 'px');
+  document.documentElement.style.setProperty('--sy', sy.toFixed(3));
+  document.getElementById('tv').style.height = sy > 1 ? `${Math.ceil(fs * ROWS * sy) + 12}px` : '';
 }
+
+function setKeys(show) {
+  document.body.classList.toggle('no-keys', !show);
+  document.getElementById('keys-toggle').textContent = show ? 'Sakrij brojke  ▼' : 'Prikaži brojke  ▲';
+  try { localStorage.setItem('tt-keys', show ? '1' : '0'); } catch { /* nije važno */ }
+  fit();
+}
+
+document.getElementById('keys-toggle').addEventListener('click', () => setKeys(document.body.classList.contains('no-keys')));
 
 // ---------- podaci ----------
 
@@ -489,7 +594,9 @@ const start = Number(location.hash.slice(1));
 cur = { p: start >= 100 && start <= 999 ? start : 100, s: 0 };
 history.replaceState(cur, '', '#' + cur.p);
 buildPages();
-fit();
+let keysPref = '1';
+try { keysPref = localStorage.getItem('tt-keys') || '1'; } catch { /* localStorage nije dostupan */ }
+setKeys(keysPref === '1');
 render();
 document.fonts?.ready.then(fit);
 addEventListener('resize', fit);

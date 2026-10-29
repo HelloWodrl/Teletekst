@@ -161,7 +161,7 @@ const SLAVONIJA_RE = /\b(slavonij\w*|slavonsk\w*|osijek\w*|osjeck\w*|baranj\w*|d
 export function regionsOf(cluster, srcById) {
   const local = cluster.items.some(i => srcById[i.source].regional);
   const titles = fold(cluster.items.map(i => i.title).join(' '));
-  // Lokalni portal (Vinkulja) u svakom opisu i oznakama spominje Vinkovce, pa se za njega gleda samo naslov.
+  // Lokalni portali (Vinkulja, Budica) u svakom opisu i oznakama spominje Vinkovce, pa se za njega gleda samo naslov.
   const texts = cluster.items.map(i => fold(srcById[i.source].local ? i.title : `${i.title} ${i.desc} ${i.cats.join(' ')}`));
   const all = texts.join(' ');
   // Kod nacionalnih vijesti usputni spomen mjesta nije dovoljan: mora biti u naslovu ili u dva članka.
@@ -174,7 +174,7 @@ export function regionsOf(cluster, srcById) {
     const s = srcById[it.source];
     if (s.regional) r.add('slavonija');
     if (s.local === 'vinkovci') {
-      // Vinkuljine rubrike: "Vinkovci", "Županija", "Crna kronika" su lokalne, "Hrvatska" i "Svijet" nisu.
+      // Rubrike lokalnih portala: "Vinkovci", "Županija", "Vukovar", "Crna kronika" su lokalne, "Hrvatska" i "Svijet" nisu.
       if (!it.cats.some(c => c === 'Hrvatska' || c === 'Svijet')) r.add('vsz');
       if (it.cats.includes('Vinkovci')) r.add('vinkovci');
     }
