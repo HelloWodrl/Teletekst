@@ -1,7 +1,7 @@
 // Service worker: aplikacija radi i bez interneta, s posljednjim preuzetim vijestima.
 // Kod promjene datoteka aplikacije povećajte VERSION.
 
-const VERSION = 'tt-v2';
+const VERSION = 'tt-v3';
 const SHELL = ['./', 'index.html', 'style.css', 'app.js', 'manifest.webmanifest',
   'icons/icon-192.png', 'icons/icon-512.png', 'icons/maskable-512.png'];
 
